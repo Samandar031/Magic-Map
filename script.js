@@ -75,6 +75,7 @@ setTimeout(function () {
 
 // app
 class App {
+  #mashqlar = [];
   constructor() {
     this._getPosition();
     form.addEventListener('submit', this._createObject.bind(this));
@@ -169,6 +170,7 @@ class App {
     const checkMusbet = (...input) => {
       return input.every(val => val > 0);
     };
+
     let distance = +inputDistance.value;
     let duration = +inputDuration.value;
     let type = inputType.value;
@@ -190,11 +192,46 @@ class App {
       );
       console.log(mashq);
 
-      this._addMarker(mashq);
+      // this._addMarker(mashq);
     }
-    if (type == 'cycling') {
-      let cycling = inputType.value;
+    if (type === 'cycling') {
+      let elevation = +inputCadence.value;
+
+      if (
+        !checkNumber(distance, duration, elevation) ||
+        !checkMusbet(distance, duration)
+      ) {
+        return alert('musbat son kiriting');
+      }
+
+      mashq = new Velik(
+        distance,
+        duration,
+        [eventMap.latlng.lat, eventMap.latlng.lng],
+        elevation
+      );
+      // console.log(mashq);
     }
+
+    // mashq obyektini mashqlar arrayga push qilish metodi
+    this.#mashqlar.push(mashq);
+    console.log(this.#mashqlar);
+  }
+
+  // 7. Mashlarni ro'yxatini chiqarish
+  _renderList(obj) {
+    let html = `<!-- <li class="workout workout--${obj.type}" data-id="${ibj.id}">
+    <h2 class="workout__title">${obj.tavsif}</h2>
+    <div class="workout__details">
+      <span class="workout__icon">🏃‍♂️</span>
+      <span class="workout__value">5.2</span>
+      <span class="workout__unit">km</span>
+    </div>
+    <div class="workout__details">
+      <span class="workout__icon">⏱</span>
+      <span class="workout__value">24</span>
+      <span class="workout__unit">min</span>
+    </div>`;
   }
 }
 
@@ -232,26 +269,49 @@ let MagicMap = new App();
 
 class Joy {
   data = new Date();
-  id = Date.now();
+  id = (Date.now() + '').slice(-7);
   constructor(distance, duration, cords) {
     (this.distance = distance),
       (this.duration = duration),
       (this.cords = cords);
   }
+  _setTavsif() {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    this.malumot = `${this.type[0].toUpperCase()} ${this.type.slice(1)} on ${
+      month[this.data.getMonth()]
+    } ${this.data.getDate()}`;
+  }
 }
 
 class Yugurish extends Joy {
+  type = 'running';
   constructor(distance, duration, cords, cadense) {
     super(distance, duration, cords);
     this.cadense = cadense;
+    this._setTavsif();
   }
 }
 
 class Velik extends Joy {
+  type = 'cycling';
   constructor(distance, duration, cords, elevation) {
     super(distance, duration, cords);
     this.elevation = elevation;
     this.calcSpead();
+    this._setTavsif();
   }
   calcSpead() {
     this.tezlik = this.distance / this.duration;
