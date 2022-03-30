@@ -77,11 +77,9 @@ setTimeout(function () {
 class App {
   constructor() {
     this._getPosition();
-    // this._showForm();
-    form.addEventListener('submit', this._submitForum);
-    inputType.addEventListener('change', this._toggleSelect(this));
+    form.addEventListener('submit', this._createObject.bind(this));
+    inputType.addEventListener('change', this._toggleSelect);
     // bind hozir hammasini chaqirib beryapdi
-    // this._showMap();
   }
 
   // 1.hozirgi o'rnimizni kordinatalarini olish metodi
@@ -133,14 +131,8 @@ class App {
     });
   }
   // 4.forma submit bo'lsa markerni chiqarish
-  _submitForum(e) {
-    e.preventDefault();
-    inputDistance.value =
-      inputDuration.value =
-      inputCadence.value =
-      inputElevation.value =
-        '';
-    L.marker([eventMap.latlng.lat, eventMap.latlng.lng])
+  _addMarker(mashq) {
+    L.marker([mashq.cords[0], mashq.cords[1]])
       .addTo(map)
       .bindPopup(
         L.popup({
@@ -152,12 +144,57 @@ class App {
         }).setContent('<p>Hello world!<br />This is a nice popup.</p>')
       )
       .openPopup();
+
+    inputDistance.value =
+      inputDuration.value =
+      inputCadence.value =
+      inputElevation.value =
+        '';
   }
 
-  // select option o'zgarganda classni toggle qilish
+  // 5.select option o'zgarganda classni toggle qilish
   _toggleSelect() {
     inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
     inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
+  }
+
+  // 6.forma ma'lumotlarini constructor orqali obyect yaratish
+  _createObject(e) {
+    e.preventDefault();
+    let mashq = '';
+    const checkNumber = (...input) => {
+      return input.every(val => Number.isFinite(val));
+    };
+
+    const checkMusbet = (...input) => {
+      return input.every(val => val > 0);
+    };
+    let distance = +inputDistance.value;
+    let duration = +inputDuration.value;
+    let type = inputType.value;
+
+    if (type === 'running') {
+      let cadence = +inputCadence.value;
+      if (
+        !checkNumber(distance, duration, cadence) &&
+        !checkMusbet(distance, duration, cadence)
+      ) {
+        return alert('musbat son kiriting');
+      }
+
+      mashq = new Yugurish(
+        distance,
+        duration,
+        [eventMap.latlng.lat, eventMap.latlng.lng],
+        cadence
+      );
+      console.log(mashq);
+
+      this._addMarker(mashq);
+    }
+    if (type == 'cycling') {
+      let cycling = inputType.value;
+    }
   }
 }
 
@@ -189,10 +226,13 @@ class App {
 
 let MagicMap = new App();
 // MagicMap._getPosition();
+// distance =
+// masofa = distanse
+// duration = minut
 
 class Joy {
   data = new Date();
-  id = Data.now().slice(-7);
+  id = Date.now();
   constructor(distance, duration, cords) {
     (this.distance = distance),
       (this.duration = duration),
@@ -206,3 +246,18 @@ class Yugurish extends Joy {
     this.cadense = cadense;
   }
 }
+
+class Velik extends Joy {
+  constructor(distance, duration, cords, elevation) {
+    super(distance, duration, cords);
+    this.elevation = elevation;
+    this.calcSpead();
+  }
+  calcSpead() {
+    this.tezlik = this.distance / this.duration;
+    return this.tezlik;
+  }
+}
+
+// const yugurUmid = new Velik(2, 2, [23, 25], 20);
+// const ali = new Yugurish(2, 2, 3);
