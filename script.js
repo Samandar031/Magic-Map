@@ -68,6 +68,57 @@ let eventMap;
 //     alert("sizning turgan o'rningizni olib bera olmadim");
 //   }
 // );
+class Joy {
+  data = new Date();
+  id = (Date.now() + '').slice(-7);
+  constructor(distance, duration, cords) {
+    (this.distance = distance),
+      (this.duration = duration),
+      (this.cords = cords);
+  }
+  _setTavsif() {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    this.malumot = `${this.type[0].toUpperCase()}${this.type.slice(1)} on ${
+      months[this.data.getMonth()]
+    } ${this.data.getDate()}`;
+  }
+}
+
+class Yugurish extends Joy {
+  type = 'running';
+  constructor(distance, duration, cords, cadense) {
+    super(distance, duration, cords);
+    this.cadense = cadense;
+    this._setTavsif();
+  }
+}
+
+class Velik extends Joy {
+  type = 'cycling';
+  constructor(distance, duration, cords, elevation) {
+    super(distance, duration, cords);
+    this.elevation = elevation;
+    this.calcSpead();
+    this._setTavsif();
+  }
+  calcSpead() {
+    this.tezlik = this.distance / this.duration;
+    return this.tezlik;
+  }
+}
 
 setTimeout(function () {
   console.log(a, b);
@@ -118,6 +169,7 @@ class App {
       )
       .openPopup();
     this._showForm();
+    this._hideForm();
   }
   // 3.formani ochish metodi
   _showForm() {
@@ -132,8 +184,8 @@ class App {
     });
   }
   // 4.forma submit bo'lsa markerni chiqarish
-  _addMarker(mashq) {
-    L.marker([mashq.cords[0], mashq.cords[1]])
+  _addMarker(obj) {
+    L.marker([obj.cords[0], obj.cords[1]])
       .addTo(map)
       .bindPopup(
         L.popup({
@@ -141,16 +193,18 @@ class App {
           minWidth: 50,
           autoClose: false,
           closeOnClick: false,
-          className: 'running-popup',
-        }).setContent('<p>Hello world!<br />This is a nice popup.</p>')
+          className: `${obj.type}-popup`,
+        }).setContent(`${obj.malumot}`)
       )
       .openPopup();
-
+  }
+  _hideForm() {
     inputDistance.value =
       inputDuration.value =
       inputCadence.value =
       inputElevation.value =
         '';
+    form.classList.add('hidden');
   }
 
   // 5.select option o'zgarganda classni toggle qilish
@@ -216,22 +270,59 @@ class App {
     // mashq obyektini mashqlar arrayga push qilish metodi
     this.#mashqlar.push(mashq);
     console.log(this.#mashqlar);
+
+    this._addMarker(mashq);
+    // mashqlar ruyhatini chiqarish
+    this._renderList(mashq);
   }
 
   // 7. Mashlarni ro'yxatini chiqarish
   _renderList(obj) {
-    let html = `<!-- <li class="workout workout--${obj.type}" data-id="${ibj.id}">
-    <h2 class="workout__title">${obj.tavsif}</h2>
+    let html = `<!-- <li class="workout workout--${obj.type}" data-id="${
+      obj.id
+    }">
+    <h2 class="workout__title">${obj.malumot}</h2>
     <div class="workout__details">
-      <span class="workout__icon">🏃‍♂️</span>
-      <span class="workout__value">5.2</span>
+      <span class="workout__icon">${obj.type === 'running' ? '🏃‍♂️' : '⏱'}</span>
+      <span class="workout__value">${obj.distance}</span>
       <span class="workout__unit">km</span>
     </div>
     <div class="workout__details">
-      <span class="workout__icon">⏱</span>
-      <span class="workout__value">24</span>
+      <span class="workout__icon">${obj.type === 'cycling' ? '🏃‍♂️' : '⏱'}</span>
+      <span class="workout__value">${obj.distance}</span>
       <span class="workout__unit">min</span>
     </div>`;
+
+    if (obj.type === 'running') {
+      html += `     <div class="workout__details">
+          <span class="workout__icon">⚡️</span>
+          <span class="workout__value">${obj.distance / obj.duration}</span>
+          <span class="workout__unit">min/km</span>
+        </div>
+        <div class="workout__details">
+          <span class="workout__icon">🦶🏼</span>
+          <span class="workout__value">${obj.cadence}</span>
+          <span class="workout__unit">spm</span>
+        </div>
+      </li>`;
+    }
+    if (obj.type === 'cycling') {
+      html += ` <div class="workout__details">
+          <span class="workout__icon">⚡️</span>
+          <span class="workout__value">${
+            obj.distance / obj.duration / 60
+          }</span>
+          <span class="workout__unit">km/h</span>
+        </div>
+        <div class="workout__details">
+          <span class="workout__icon">⛰</span>
+          <span class="workout__value">${obj.cadence}</span>
+          <span class="workout__unit">m</span>
+        </div>
+      </li> -->`;
+    }
+    // form tegini formni tagida ishladi
+    form.insertAdjacentHTML('afterend', html);
   }
 }
 
@@ -266,58 +357,6 @@ let MagicMap = new App();
 // distance =
 // masofa = distanse
 // duration = minut
-
-class Joy {
-  data = new Date();
-  id = (Date.now() + '').slice(-7);
-  constructor(distance, duration, cords) {
-    (this.distance = distance),
-      (this.duration = duration),
-      (this.cords = cords);
-  }
-  _setTavsif() {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    this.malumot = `${this.type[0].toUpperCase()} ${this.type.slice(1)} on ${
-      month[this.data.getMonth()]
-    } ${this.data.getDate()}`;
-  }
-}
-
-class Yugurish extends Joy {
-  type = 'running';
-  constructor(distance, duration, cords, cadense) {
-    super(distance, duration, cords);
-    this.cadense = cadense;
-    this._setTavsif();
-  }
-}
-
-class Velik extends Joy {
-  type = 'cycling';
-  constructor(distance, duration, cords, elevation) {
-    super(distance, duration, cords);
-    this.elevation = elevation;
-    this.calcSpead();
-    this._setTavsif();
-  }
-  calcSpead() {
-    this.tezlik = this.distance / this.duration;
-    return this.tezlik;
-  }
-}
 
 // const yugurUmid = new Velik(2, 2, [23, 25], 20);
 // const ali = new Yugurish(2, 2, 3);
